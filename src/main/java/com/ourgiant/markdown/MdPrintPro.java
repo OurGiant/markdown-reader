@@ -86,6 +86,8 @@ public class MdPrintPro {
     }
 
     public static void main(String[] args) throws Exception {
+        System.setProperty("awt.useSystemAAFontSettings", "lcd");
+        System.setProperty("swing.aatext", "true");
         availableThemes = loadThemes();
         currentTheme = availableThemes.getFirst();
 
@@ -137,20 +139,26 @@ public class MdPrintPro {
             if (currentOpenPath != null) updateContent();
         });
 
-        JComboBox<RetroTheme> themeBox = new JComboBox<>(availableThemes.toArray(new RetroTheme[0]));
-        themeBox.setSelectedItem(currentTheme);
-        themeBox.addActionListener(e -> {
-            currentTheme = (RetroTheme) themeBox.getSelectedItem();
-            if (currentTheme != null) normalizeTheme(currentTheme);
-            if (currentOpenPath != null) updateContent();
-        });
+        JButton themeBtn = new JButton(currentTheme != null ? currentTheme.name : "Theme");
+        JPopupMenu themeMenu = new JPopupMenu();
+        for (RetroTheme theme : availableThemes) {
+            JMenuItem item = new JMenuItem(theme.name);
+            item.addActionListener(e -> {
+                currentTheme = theme;
+                normalizeTheme(currentTheme);
+                themeBtn.setText(currentTheme.name);
+                if (currentOpenPath != null) updateContent();
+            });
+            themeMenu.add(item);
+        }
+        themeBtn.addActionListener(e -> themeMenu.show(themeBtn, 0, themeBtn.getHeight()));
 
         JButton printBtn = new JButton("Export PDF");
         printBtn.addActionListener(e -> triggerPrint());
 
         bar.add(previewToggle);
         bar.add(new JLabel("Theme: "));
-        bar.add(themeBox);
+        bar.add(themeBtn);
         bar.add(printBtn);
 
         frame.add(new JScrollPane(editPane), BorderLayout.CENTER);
