@@ -30,6 +30,16 @@ Produces `target/md-print-pro-all.jar`.
 java -jar target/md-print-pro-all.jar
 ```
 
+## Test
+
+```bash
+mvn test
+```
+
+Covers the `core/` package (markdown/HTML rendering, path validation, pagination
+placement math) — pure logic with no `javax.swing.*` dependency, so it's directly
+unit-testable without a live UI.
+
 ## Project Structure
 
 ```
