@@ -33,8 +33,19 @@ java -jar target/md-print-pro-all.jar
 
 ```
 src/main/java/com/ourgiant/markdown/
-├── MdPrintPro.java          # Main application, file watcher, theme engine, print logic
-└── SmartHtmlPrintable.java  # Print-aware HTML renderer
+├── Main.java                       # Entry point
+├── model/
+│   ├── RetroTheme.java              # Theme data
+│   ├── TagType.java                 # HTML tag classification for pagination
+│   └── Candidate.java                # A candidate page-break point
+├── core/                            # Pure logic, no javax.swing.* dependency
+│   ├── PathValidator.java            # Validates/canonicalizes a user-supplied file path
+│   ├── MarkdownHtmlRenderer.java      # Markdown -> print-aware HTML rendering
+│   ├── ThemeLoader.java               # Loads themes.json from the classpath
+│   └── PaginationPlanner.java         # Page-break placement math
+└── gui/
+    ├── MainWindow.java               # Main application window, file watcher, print trigger
+    └── SmartHtmlPrintable.java        # Print-aware HTML renderer (Swing layout)
 ```
 
 ## Dependencies
