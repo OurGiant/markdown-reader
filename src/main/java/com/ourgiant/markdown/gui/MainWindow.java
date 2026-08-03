@@ -77,6 +77,13 @@ public final class MainWindow extends JFrame {
         fileMenu.addSeparator();
         fileMenu.add(exitItem);
         menuBar.add(fileMenu);
+
+        JMenu helpMenu = new JMenu("Help");
+        JMenuItem aboutItem = new JMenuItem("About");
+        aboutItem.addActionListener(e -> new AboutDialog(this).setVisible(true));
+        helpMenu.add(aboutItem);
+        menuBar.add(helpMenu);
+
         setJMenuBar(menuBar);
 
         // Icon
