@@ -1,10 +1,13 @@
 package com.ourgiant.markdown.gui;
 
+import com.ourgiant.markdown.AppPreferences;
 import com.ourgiant.markdown.ThemeManager;
 import com.ourgiant.markdown.core.MarkdownHtmlRenderer;
 import com.ourgiant.markdown.core.PathValidator;
 import com.ourgiant.markdown.core.ThemeLoader;
 import com.ourgiant.markdown.model.RetroTheme;
+import com.ourgiant.markdown.util.AppVersion;
+import com.ourgiant.markdown.util.UpdateChecker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +38,7 @@ import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * MarkDown Client main window.
@@ -67,6 +71,46 @@ public final class MainWindow extends JFrame {
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setupUI();
+        checkForUpdateAndNotifyIfNewer();
+    }
+
+    /**
+     * Silent startup check: runs off the EDT so launch is never delayed by network I/O, and
+     * only surfaces UI (the non-modal About dialog) when a genuinely newer version is found.
+     * Dedupes against the last-notified version so it doesn't nag on every launch.
+     */
+    private void checkForUpdateAndNotifyIfNewer() {
+        SwingWorker<Optional<UpdateChecker.ReleaseInfo>, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Optional<UpdateChecker.ReleaseInfo> doInBackground() {
+                return UpdateChecker.fetchLatestRelease();
+            }
+
+            @Override
+            protected void done() {
+                Optional<UpdateChecker.ReleaseInfo> release;
+                try {
+                    release = get();
+                } catch (Exception e) {
+                    logger.warn("Startup update check failed", e);
+                    return;
+                }
+                if (release.isEmpty()) {
+                    return;
+                }
+                UpdateChecker.ReleaseInfo info = release.get();
+                if (!UpdateChecker.isNewerVersion(info.version(), AppVersion.resolve())) {
+                    return;
+                }
+                AppPreferences prefs = new AppPreferences();
+                if (info.version().equals(prefs.getLastNotifiedUpdateVersion())) {
+                    return;
+                }
+                prefs.setLastNotifiedUpdateVersion(info.version());
+                new AboutDialog(MainWindow.this, info).setVisible(true);
+            }
+        };
+        worker.execute();
     }
 
     private void setupUI() {
