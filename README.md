@@ -40,6 +40,13 @@ Covers the `core/` package (markdown/HTML rendering, path validation, pagination
 placement math) — pure logic with no `javax.swing.*` dependency, so it's directly
 unit-testable without a live UI.
 
+## Releases
+
+Pushing a `v*` tag triggers `.github/workflows/build.yml`, which runs the test
+suite, then builds and attaches native installers to a GitHub Release: a
+Windows app-image zip, a macOS `.dmg` for both `arm64` and `x64`, and a Linux
+`.deb`, all via `jpackage`. Icon assets live in `src/packaging/`.
+
 ## Project Structure
 
 ```
