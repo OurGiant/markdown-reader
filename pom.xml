@@ -7,7 +7,7 @@
 
     <groupId>com.ourgiant.markdown</groupId>
     <artifactId>md-print-pro</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
 
     <name>MD Print Pro</name>
@@ -51,6 +51,35 @@
             <groupId>com.vladsch.flexmark</groupId>
             <artifactId>flexmark-ext-autolink</artifactId>
             <version>${flexmark.version}</version>
+        </dependency>
+
+        <!-- Logging -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.16</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.6.1</version>
+        </dependency>
+
+        <!-- FlatLaf - Modern Look and Feel with themes -->
+        <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf</artifactId>
+            <version>3.7.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf-intellij-themes</artifactId>
+            <version>3.7.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf-extras</artifactId>
+            <version>3.7.2</version>
         </dependency>
     </dependencies>
 

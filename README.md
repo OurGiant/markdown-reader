@@ -8,7 +8,8 @@ A Java Swing desktop application for reading, previewing, and printing Markdown 
 - **Live file watching**: Automatically reloads when the open file changes on disk
 - **Print preview**: Toggle a print-profile view on screen before printing
 - **PDF export**: Export directly to PDF using the print profile
-- **Retro themes**: Multiple colour themes configurable via JSON
+- **Retro themes**: Multiple colour themes configurable via JSON (content styling)
+- **Look & feel**: FlatLaf-based UI theming, switchable from View > Look & Feel (application chrome, separate from retro themes)
 - **Print optimisations**: Fixed table layout, long-token wrapping, normalised font sizes, reflow to page width
 
 ## Prerequisites
@@ -34,6 +35,7 @@ java -jar target/md-print-pro-all.jar
 ```
 src/main/java/com/ourgiant/markdown/
 ├── Main.java                       # Entry point
+├── ThemeManager.java                # FlatLaf look-and-feel selection
 ├── model/
 │   ├── RetroTheme.java              # Theme data
 │   ├── TagType.java                 # HTML tag classification for pagination
@@ -52,6 +54,8 @@ src/main/java/com/ourgiant/markdown/
 
 - **Flexmark**: Markdown parsing and HTML rendering (tables, strikethrough, autolink extensions)
 - **Jackson**: Theme configuration loading from JSON
+- **FlatLaf**: Modern look-and-feel and IntelliJ theme palette for the application chrome
+- **SLF4J + Logback**: Logging, to console and `~/.md-print-pro/logs/`
 
 ## License
 

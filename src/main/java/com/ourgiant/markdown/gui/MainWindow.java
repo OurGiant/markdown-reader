@@ -1,9 +1,13 @@
 package com.ourgiant.markdown.gui;
 
+import com.ourgiant.markdown.ThemeManager;
 import com.ourgiant.markdown.core.MarkdownHtmlRenderer;
 import com.ourgiant.markdown.core.PathValidator;
 import com.ourgiant.markdown.core.ThemeLoader;
 import com.ourgiant.markdown.model.RetroTheme;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import javax.sound.sampled.AudioInputStream;
@@ -43,6 +47,8 @@ import java.util.List;
  */
 public final class MainWindow extends JFrame {
 
+    private static final Logger logger = LoggerFactory.getLogger(MainWindow.class);
+
     private final List<RetroTheme> availableThemes;
     private RetroTheme currentTheme;
 
@@ -77,6 +83,16 @@ public final class MainWindow extends JFrame {
         fileMenu.addSeparator();
         fileMenu.add(exitItem);
         menuBar.add(fileMenu);
+
+        JMenu viewMenu = new JMenu("View");
+        JMenu lookAndFeelMenu = new JMenu("Look & Feel");
+        for (String themeName : ThemeManager.getAvailableThemeNames()) {
+            JMenuItem item = new JMenuItem(themeName);
+            item.addActionListener(e -> ThemeManager.applyTheme(themeName));
+            lookAndFeelMenu.add(item);
+        }
+        viewMenu.add(lookAndFeelMenu);
+        menuBar.add(viewMenu);
 
         JMenu helpMenu = new JMenu("Help");
         JMenuItem aboutItem = new JMenuItem("About");
@@ -154,7 +170,7 @@ public final class MainWindow extends JFrame {
             startWatcher(validatedPath);
         } catch (IOException | SecurityException e) {
             editPane.setText("<html><body><h2>Error Opening File</h2><p>" + e.getMessage() + "</p></body></html>");
-            System.err.println("Failed to open file: " + e.getMessage());
+            logger.warn("Failed to open file: {}", path, e);
         }
     }
 
@@ -179,7 +195,7 @@ public final class MainWindow extends JFrame {
                     if (!key.reset()) break;
                 }
             } catch (Exception e) {
-                System.err.println("Watcher Error: " + e.getMessage());
+                logger.error("Watcher error for {}", filePath, e);
             }
         });
     }
@@ -255,7 +271,7 @@ public final class MainWindow extends JFrame {
                 job.print();
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            logger.error("Failed to export/print PDF", ex);
         } finally {
             // Restore UI state
             printPreview = originalPreview;
