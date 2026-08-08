@@ -1,5 +1,11 @@
 # MD Print Pro
 
+[![Build](https://github.com/OurGiant/markdown-reader/actions/workflows/build.yml/badge.svg)](https://github.com/OurGiant/markdown-reader/actions/workflows/build.yml)
+[![Latest Release](https://img.shields.io/github/v/release/OurGiant/markdown-reader?label=Release)](https://github.com/OurGiant/markdown-reader/releases/latest)
+[![License: MIT](https://img.shields.io/github/license/OurGiant/markdown-reader)](LICENSE)
+[![Java 24](https://img.shields.io/badge/Java-24-orange?logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![Platforms](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-blue)](#releases)
+
 A Java Swing desktop application for reading, previewing, and printing Markdown files. Renders GitHub-flavored Markdown with live file watching, theming support, and print-optimised output.
 
 ## Features
@@ -11,6 +17,7 @@ A Java Swing desktop application for reading, previewing, and printing Markdown 
 - **Retro themes**: Multiple colour themes configurable via JSON (content styling)
 - **Look & feel**: FlatLaf-based UI theming, switchable from View > Look & Feel (application chrome, separate from retro themes)
 - **Print optimisations**: Fixed table layout, long-token wrapping, normalised font sizes, reflow to page width
+- **Update checking**: Help > About shows the current version and checks GitHub Releases for a newer one; a non-blocking silent check also runs on startup and only notifies once per new version
 
 ## Security
 
@@ -57,7 +64,9 @@ mvn test
 
 Covers the `core/` package (markdown/HTML rendering, path validation, pagination
 placement math) — pure logic with no `javax.swing.*` dependency, so it's directly
-unit-testable without a live UI.
+unit-testable without a live UI — plus `util/` (version resolution, update checking)
+and the pure logic pulled out of `gui/` (`AboutDialog.isTrustedReleaseUrl`, the
+release-URL allowlist check).
 
 ## Releases
 
@@ -71,6 +80,7 @@ Windows app-image zip, a macOS `.dmg` for both `arm64` and `x64`, and a Linux
 ```
 src/main/java/com/ourgiant/markdown/
 ├── Main.java                       # Entry point
+├── AppPreferences.java              # java.util.prefs wrapper (update-check dedup, etc.)
 ├── ThemeManager.java                # FlatLaf look-and-feel selection
 ├── model/
 │   ├── RetroTheme.java              # Theme data
@@ -81,8 +91,12 @@ src/main/java/com/ourgiant/markdown/
 │   ├── MarkdownHtmlRenderer.java      # Markdown -> print-aware HTML rendering
 │   ├── ThemeLoader.java               # Loads themes.json from the classpath
 │   └── PaginationPlanner.java         # Page-break placement math
+├── util/                            # Shared helpers with no business meaning of their own
+│   ├── AppVersion.java               # Resolves the running app's version (manifest/properties fallback)
+│   └── UpdateChecker.java            # Checks GitHub Releases for a newer version
 └── gui/
     ├── MainWindow.java               # Main application window, file watcher, print trigger
+    ├── AboutDialog.java              # Help > About: version, manual + silent update checks
     └── SmartHtmlPrintable.java        # Print-aware HTML renderer (Swing layout)
 ```
 
