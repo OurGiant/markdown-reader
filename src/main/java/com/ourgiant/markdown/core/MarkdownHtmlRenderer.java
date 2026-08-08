@@ -14,10 +14,20 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** Markdown -> print-aware HTML rendering. No javax.swing.* dependency, so this is directly
- *  unit-testable without a live Swing component. */
+ *  unit-testable without a live Swing component.
+ *
+ *  <p>Input markdown is untrusted (it comes from arbitrary files the user opens), so raw HTML
+ *  passthrough is disabled and rendered {@code <img>} tags are restricted to {@code data:} URIs
+ *  before the result ever reaches the {@code JEditorPane} — otherwise a remote image URL would be
+ *  fetched automatically just by opening a file. */
 public final class MarkdownHtmlRenderer {
+
+    private static final Pattern IMG_TAG = Pattern.compile("<img\\b[^>]*>", Pattern.CASE_INSENSITIVE);
+    private static final Pattern IMG_SRC = Pattern.compile("\\bsrc\\s*=\\s*(\"([^\"]*)\"|'([^']*)')", Pattern.CASE_INSENSITIVE);
 
     // Cache flexmark objects (no need to rebuild on every update)
     private static final MutableDataSet MD_OPTIONS = new MutableDataSet()
@@ -25,7 +35,11 @@ public final class MarkdownHtmlRenderer {
                     TablesExtension.create(),
                     StrikethroughExtension.create(),
                     AutolinkExtension.create()
-            ));
+            ))
+            // Untrusted input: never pass raw HTML (script/iframe/img/etc. written directly
+            // into the markdown) through to the rendered output unfiltered.
+            .set(HtmlRenderer.SUPPRESS_HTML_BLOCKS, true)
+            .set(HtmlRenderer.SUPPRESS_INLINE_HTML, true);
     private static final Parser MD_PARSER = Parser.builder(MD_OPTIONS).build();
     private static final HtmlRenderer MD_RENDERER = HtmlRenderer.builder(MD_OPTIONS).softBreak("<br />\n").build();
 
@@ -43,7 +57,7 @@ public final class MarkdownHtmlRenderer {
         normalizeTheme(t);
 
         // Render markdown -> HTML
-        String htmlBody = MD_RENDERER.render(MD_PARSER.parse(markdown));
+        String htmlBody = stripRemoteImages(MD_RENDERER.render(MD_PARSER.parse(markdown)));
         String header = headerHtml == null ? "" : headerHtml;
 
         // Print profile overrides
@@ -91,6 +105,28 @@ public final class MarkdownHtmlRenderer {
                 + tablePrintRules;
 
         return "<html><head><style>" + css + "</style></head><body>" + header + htmlBody + "</body></html>";
+    }
+
+    /**
+     * Drops any {@code <img>} tag whose {@code src} is not a {@code data:} URI. The rendered HTML
+     * is handed to a live {@code JEditorPane}, whose {@code HTMLEditorKit} fetches image URLs at
+     * render time — so an {@code http(s)://} (or any other remote) image reference in an untrusted
+     * markdown file would otherwise trigger an outbound network request just from opening it.
+     */
+    static String stripRemoteImages(String html) {
+        Matcher tagMatcher = IMG_TAG.matcher(html);
+        StringBuilder out = new StringBuilder();
+        while (tagMatcher.find()) {
+            String tag = tagMatcher.group();
+            Matcher srcMatcher = IMG_SRC.matcher(tag);
+            String src = srcMatcher.find()
+                    ? (srcMatcher.group(2) != null ? srcMatcher.group(2) : srcMatcher.group(3))
+                    : null;
+            String replacement = (src != null && src.trim().toLowerCase().startsWith("data:")) ? tag : "";
+            tagMatcher.appendReplacement(out, Matcher.quoteReplacement(replacement));
+        }
+        tagMatcher.appendTail(out);
+        return out.toString();
     }
 
     public static String safeFont(String font) {
