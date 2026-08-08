@@ -12,6 +12,25 @@ A Java Swing desktop application for reading, previewing, and printing Markdown 
 - **Look & feel**: FlatLaf-based UI theming, switchable from View > Look & Feel (application chrome, separate from retro themes)
 - **Print optimisations**: Fixed table layout, long-token wrapping, normalised font sizes, reflow to page width
 
+## Security
+
+Markdown files are treated as untrusted input, since they may come from anywhere
+the user chooses to open. `core/MarkdownHtmlRenderer.java` hardens the render
+pipeline before HTML ever reaches the `JEditorPane`:
+
+- **Raw HTML is suppressed, not passed through.** Flexmark's `SUPPRESS_HTML_BLOCKS`
+  and `SUPPRESS_INLINE_HTML` options are enabled, so HTML embedded directly in a
+  `.md` file (`<script>`, `<iframe>`, raw `<img>`, etc.) is dropped rather than
+  rendered.
+- **Remote images are stripped.** `Swing`'s `HTMLEditorKit` fetches `<img>` URLs
+  at render time, so a markdown image referencing a remote host would otherwise
+  trigger an outbound network request just from opening the file (a tracking-pixel
+  risk). Only `data:` URI images survive rendering — every other markdown image
+  (`![alt](https://...)`) is stripped.
+
+There is no `HyperlinkListener` registered on the `JEditorPane`, so link clicks
+are inert regardless of the above.
+
 ## Prerequisites
 
 - Java 24 or higher

@@ -125,4 +125,42 @@ class MarkdownHtmlRendererTest {
 
         assertTrue(header.contains("(print profile)"));
     }
+
+    @Test
+    void rawHtmlInMarkdownIsSuppressedNotPassedThrough() {
+        String html = MarkdownHtmlRenderer.buildHtml(
+                "before\n\n<script>alert(1)</script>\n\n<div>raw block</div> and <b>inline</b> after",
+                customTheme(), false, "");
+
+        assertFalse(html.contains("<script>"));
+        assertFalse(html.contains("<div>raw block</div>"));
+        assertFalse(html.contains("<b>inline</b>"));
+    }
+
+    @Test
+    void remoteMarkdownImageIsStrippedFromRenderedHtml() {
+        String html = MarkdownHtmlRenderer.buildHtml(
+                "![tracker](https://evil.example/pixel.png)", customTheme(), false, "");
+
+        assertFalse(html.contains("evil.example"));
+        assertFalse(html.contains("<img"));
+    }
+
+    @Test
+    void dataUriMarkdownImageIsPreserved() {
+        String html = MarkdownHtmlRenderer.buildHtml(
+                "![dot](data:image/png;base64,iVBORw0KGgo=)", customTheme(), false, "");
+
+        assertTrue(html.contains("<img"));
+        assertTrue(html.contains("data:image/png;base64,iVBORw0KGgo="));
+    }
+
+    @Test
+    void rawHtmlImgTagWithRemoteSrcIsStripped() {
+        String html = MarkdownHtmlRenderer.buildHtml(
+                "<img src=\"http://evil.example/pixel.png\">", customTheme(), false, "");
+
+        assertFalse(html.contains("evil.example"));
+        assertFalse(html.contains("<img"));
+    }
 }
