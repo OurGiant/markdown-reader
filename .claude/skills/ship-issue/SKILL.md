@@ -8,8 +8,10 @@ description: The standard workflow for shipping a bug fix or feature to MD Print
 Follow `java-swing-ship-issue` (the generic workflow shared across the
 Java Swing project family) with these MD Print Pro specifics:
 
-- **Project path**: `/projects/markdown-reader` inside the build
-  container.
+- **Project path**: `/projects/OHI/markdown-reader` inside the build
+  container (confirmed 2026-08-08; this has drifted before — re-check with
+  `find / -maxdepth 3 -iname markdown-reader` inside the container if a
+  `docker exec` command reports "No such file or directory").
 - **Verify**: use this repo's own `.claude/skills/verify/SKILL.md` for
   build/launch mechanics, including a confirmed `pom.xml` bind-mount
   staleness gotcha worth knowing about before you conclude an edit "isn't
@@ -31,14 +33,18 @@ Java Swing project family) with these MD Print Pro specifics:
   by design (`java-swing-project-setup` §3) and are covered by real unit
   tests (`src/test/java/.../core/`). If a change adds logic to `core/`,
   add or extend a test there rather than only checking it through the
-  live UI — `gui/MainWindow` and `gui/SmartHtmlPrintable` are the only
-  classes that should need reflection-harness verification instead of a
-  unit test.
+  live UI — `gui/MainWindow`, `gui/SmartHtmlPrintable`, and `gui/AboutDialog`
+  are the only classes that should need reflection-harness verification
+  instead of a unit test (though `AboutDialog.isTrustedReleaseUrl` itself
+  is pulled out and unit-tested — see `AboutDialogTest`).
 - **`PathValidator.validateAndNormalizePath` is a security boundary**
   (rejects paths that don't resolve to an existing regular file) — a
   change anywhere near file-opening should keep or extend
   `PathValidatorTest`'s coverage, not just eyeball it working once.
-- No CI is wired up yet (issue #8, tracked as a separate, deliberate
-  follow-up per `java-swing-project-setup` §8's kickoff guidance) — until
-  it lands, `gh pr checks --watch` has nothing to watch; rely on the
-  local `mvn test`/`mvn package` + live-UI verification steps instead.
+- CI is live (`.github/workflows/build.yml`, added for issue #8): every
+  PR runs `test`, `build-windows`/`build-linux`/`build-macos`, and a Snyk
+  security scan. After opening a PR, run
+  `gh pr checks <N> --watch --interval 30` (in the background — it's a
+  real network call) and confirm green before reporting the PR ready, in
+  addition to the local `mvn test`/`mvn package` + live-UI verification
+  steps.

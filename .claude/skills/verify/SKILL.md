@@ -15,12 +15,16 @@ actually type for *this* project.
 Maven only exists in the Docker container, not on the host:
 
 ```bash
-docker exec festive_bardeen bash -c "cd /projects/markdown-reader && mvn -q package -DskipTests"
+docker exec festive_bardeen bash -c "cd /projects/OHI/markdown-reader && mvn -q package -DskipTests"
 ```
 
 If `festive_bardeen` doesn't respond, find the current container:
 `docker ps -a --format '{{.Names}} {{.Status}} {{.Image}}'` and
 `docker start <name>` if stopped — the name can drift across sessions.
+The in-container project path has drifted before too (was `/projects/markdown-reader`,
+confirmed `/projects/OHI/markdown-reader` as of 2026-08-08) — if a `docker exec`
+command reports "No such file or directory", re-find it with
+`docker exec festive_bardeen find / -maxdepth 3 -iname markdown-reader`.
 
 `/projects` is bind-mounted from the host's `~/projects`, so the jar lands
 at `target/md-print-pro-all.jar`, visible on the host. The container is
@@ -43,12 +47,12 @@ issue #7: the container's view of `pom.xml` didn't include an edit made
 moments earlier on the host, so `version.properties` built with the
 literal `${project.version}` placeholder unsubstituted instead of the
 real version. Confirmed via
-`docker exec festive_bardeen grep -n "<resources>" /projects/markdown-reader/pom.xml`
+`docker exec festive_bardeen grep -n "<resources>" /projects/OHI/markdown-reader/pom.xml`
 showing the block missing container-side while it was present on the
 host. Fixed with a forced sync:
 
 ```bash
-docker cp pom.xml festive_bardeen:/projects/markdown-reader/pom.xml
+docker cp pom.xml festive_bardeen:/projects/OHI/markdown-reader/pom.xml
 ```
 
 If a build seems to ignore a just-made edit to `pom.xml` (or any file),
